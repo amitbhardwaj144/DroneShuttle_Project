@@ -1,0 +1,317 @@
+###############################################################################################################
+# Note : Only for Assignment purpose, do not copy the code for actual project deployement.                    #
+# Note : The Cloudformation Security Group IP address is open by default (testing purpose).                   #
+# You should update Security Group Access with your own IP Address to ensure your instances security.         #
+###############################################################################################################
+# Prerequisites                                                                                               #
+# Before you can start deplying the infrastucture for droneshuttle website, you need the following:           #
+# - In AWS account must have one VPC available to be created in the selected region (our case us-east-1)      #
+# - Amazon EC2 key pair Created                                                                               #
+# Optional to test: If needs to test route 53                                                                 #
+# - Installed Domain in Route 53.                                                                             #
+# - Installed Certificate (in your selected region & also in us-east-1)                                       #
+###############################################################################################################
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+    This is a master template to create a Web Application Architecture.
+    The following task will be built in this template.
+    - Custom VPC with Private and Public Subnet spread across 2 Availability Zones.
+    - NAT Gateways (in one Public AZ) and route to private subnets.
+    - Internet Gateway, with a default route on the public subnets.
+###############################################################################################################
+
+Parameters: 
+
+# Update your own IP address CIDR range
+  PMOWNIP:
+    Default: "192.168.0.0/24"
+    Description: "Update this with your own office/home public ip address"
+    Type: "String"
+
+# Update your own EC2 key pair
+  PMKeyName:
+    Default: "useast_EC2KeyPair"
+    Description: "Enter an existing EC2 KeyPair. Default is useast_EC2KeyPair."
+    Type: "String" 
+
+# Update your own S3 bucket URL of infrastructure code
+  PMTemplateURL:
+    Default: "https://cf-templates-1svjbbx2cs7l5-us-east-1.s3.amazonaws.com/infrastructure"
+    Description: "Enter an existing S3 Cloudformation Bucket."
+    Type: "String"
+
+# Update your desired hosted zone
+  PMHostedZone:
+    Default: "droneshuttles.org"
+    Description: "Enter an existing Hosted Zone."
+    Type: "String"
+
+# Update with your required instance type
+  PMInstanceType: 
+    Description: "Enter t2.micro or t3.micro. Default is t2.micro."
+    Type: "String"
+    Default: "t2.micro"
+    AllowedValues: 
+      - "t2.micro"
+      - "t3.micro"
+
+
+###############################################################################################################
+
+# For any additional Region & Environment, You have to add and update below parameters as per your requirement.
+Mappings:
+  EnvMap:
+
+    dev:
+      ASMIN: '1'
+      ASMAX: '2'
+      ASDES: '2'
+      WEBDOMAIN: "dev.droneshuttles.org"
+      CDNDOMAIN: "dev.droneshuttles.org"
+
+    staging:
+      ASMIN: '2'
+      ASMAX: '2'
+      ASDES: '2'
+      WEBDOMAIN: "staging.droneshuttles.org"
+      CDNDOMAIN: "static.droneshuttles.org"
+
+    prod:
+      ASMIN: '2'
+      ASMAX: '5'
+      ASDES: '2'
+      WEBDOMAIN: "www.droneshuttles.org"
+      CDNDOMAIN: "cdn.droneshuttles.org"
+
+  RegionMap:
+    us-east-1:
+      # AMI Instance - Amazon Linux AMI 2016.09.1 (HVM), SSD Volume Type - ami-dc9339bf (Free tier eligible)
+      AMI: "ami-0b33d91d"
+      # AStorage - The storage class to which you want the object to transition.
+      AStorage: "GLACIER"
+      # Create and Update with your own cert ARN HERE!
+      # Assuming you have already upload to AWS Certificate Manager
+      CertARN: "arn:aws:acm:us-east-1:445016746170:certificate/2f4e520a-1f96-4c12-878e-99fb69b6c262"
+
+    us-east-2:
+      AMI: "ami-c55673a0"
+      AStorage: "GLACIER"
+      CertARN: "arn:aws:acm:us-east-1:445016746170:certificate/2f4e520a-1f96-4c12-878e-99fb69b6c262"
+
+    us-west-1:
+      AMI: "ami-165a0876"
+      AStorage: "GLACIER"
+      CertARN: "arn:aws:acm:us-east-1:445016746170:certificate/2f4e520a-1f96-4c12-878e-99fb69b6c262"
+
+    us-west-2:
+      AMI: "ami-f173cc91"
+      AStorage: "GLACIER"
+      CertARN: "arn:aws:acm:us-east-1:445016746170:certificate/2f4e520a-1f96-4c12-878e-99fb69b6c262"
+
+###############################################################################################################
+
+Resources:
+
+# To Create IAM Role and Policy
+  MyIAMRole:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-iam.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+
+# To Create S3 Bucket
+  MyS3Bucket:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-s3bucket.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+        PMRegionAStorage: !FindInMap ["RegionMap", !Ref "AWS::Region", "AStorage"]
+
+# To Create VPC and Subnet
+  MyVPC:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-vpc.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+        PMVpcCIDR: "10.0.0.0/16"
+        PMPublicSubnet1CIDR: "10.0.1.0/24"
+        PMPublicSubnet2CIDR: "10.0.2.0/24"
+        PMPrivateSubnet1CIDR: "10.0.3.0/24"
+        PMPrivateSubnet2CIDR: "10.0.4.0/24"
+        PMFlowLogRole: !GetAtt "MyIAMRole.Outputs.VPCFlowLogRoleArn"
+
+# To Create Security Group
+  MySecurityGroup:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-securitygroup.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+        PMOWNIP: !Ref "PMOWNIP"
+        PMVPC: !GetAtt "MyVPC.Outputs.VPC"
+        PMNACL: !GetAtt "MyVPC.Outputs.MyNetworkACL"
+
+# To Create RDS instance
+  MyRDS:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn:
+    - "MySecurityGroup"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-rds.yaml"
+      TimeoutInMinutes: '30'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+        DatabaseUser: "startupadmin"
+        DatabasePassword: "0bee082a464"
+        DatabaseName: !Sub "${AWS::StackName}db"
+        DatabaseSize: '5'
+        DatabaseEngine: "mysql"
+        DatabaseInstanceClass: "db.t2.micro"
+        PMRDSSG: !GetAtt "MySecurityGroup.Outputs.RDSSG"
+        PMPrivateSubnets: !GetAtt "MyVPC.Outputs.PrivateSubnets"
+
+# To Create Load Balancer (NLB) for App Server
+  MyAPPELB:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-elb-appserver.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+        PMAPPELBSG: !GetAtt "MySecurityGroup.Outputs.APPELBSG"
+        PMS3Logging: !GetAtt "MyS3Bucket.Outputs.S3Logging"
+        PMPrivateSubnets: !GetAtt "MyVPC.Outputs.PrivateSubnets"
+
+# To Create Autoscaling group for App Server
+  MyAPPAutoScaling:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-autoscaling-appserver.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+        PMKeyName: !Ref "PMKeyName"
+        PMInstanceType: !Ref "PMInstanceType"
+        PMRegionAMI: !FindInMap ["RegionMap", !Ref "AWS::Region", "AMI"]
+        PMAPPHostSG : !GetAtt "MySecurityGroup.Outputs.APPHostSG"
+        PMAPPLoadBalancer: !GetAtt "MyAPPELB.Outputs.APPLoadBalancer"
+        PMIAMS3CWInstanceProfile: !GetAtt "MyIAMRole.Outputs.IAMS3CWInstanceProfile"
+        PMPrivateSubnets: !GetAtt "MyVPC.Outputs.PrivateSubnets"
+        PMASMIN: !FindInMap ["EnvMap", !Ref "AWS::StackName", "ASMIN"]
+        PMASMAX: !FindInMap ["EnvMap", !Ref "AWS::StackName", "ASMAX"]
+        PMASDES: !FindInMap ["EnvMap", !Ref "AWS::StackName", "ASDES"]
+        PMWEBDOMAIN: !FindInMap ["EnvMap", !Ref "AWS::StackName", "WEBDOMAIN"]
+
+# To Create Load Balancer (ALB) for Web Server
+  MyWEBELB:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn:
+    - "MyAPPAutoScaling"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-elb-webserver.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+        PMDomain1CertARN: !FindInMap ["RegionMap", !Ref "AWS::Region", "CertARN"]
+        PMWEBELBSG: !GetAtt "MySecurityGroup.Outputs.WEBELBSG"
+        PMPublicSubnets: !GetAtt "MyVPC.Outputs.PublicSubnets"
+        PMS3Backup: !GetAtt "MyS3Bucket.Outputs.S3Backup"
+        PMS3Logging: !GetAtt "MyS3Bucket.Outputs.S3Logging"
+
+# To Create Autoscaling group for Web Server
+  MyWEBAutoScaling:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn:
+    - "MyWEBELB"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-autoscaling-webserver.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMServerEnv: !Ref "AWS::StackName"
+        PMKeyName: !Ref "PMKeyName"
+        PMInstanceType: !Ref "PMInstanceType"
+        PMRegionAMI: !FindInMap ["RegionMap", !Ref "AWS::Region", "AMI"]
+        PMProxyHostSG: !GetAtt "MySecurityGroup.Outputs.ProxyHostSG"
+        PMWEBLoadBalancer: !GetAtt "MyWEBELB.Outputs.WEBLoadBalancer"
+        PMIAMS3CWInstanceProfile: !GetAtt "MyIAMRole.Outputs.IAMS3CWInstanceProfile"
+        PMPublicSubnets: !GetAtt "MyVPC.Outputs.PublicSubnets"
+        PMAPPLoadBalancerUrl: !GetAtt "MyAPPELB.Outputs.APPLoadBalancerUrl"
+        PMASMIN: !FindInMap ["EnvMap", !Ref "AWS::StackName", "ASMIN"]
+        PMASMAX: !FindInMap ["EnvMap", !Ref "AWS::StackName", "ASMAX"]
+        PMASDES: !FindInMap ["EnvMap", !Ref "AWS::StackName", "ASDES"]
+        PMWEBDOMAIN: !FindInMap ["EnvMap", !Ref "AWS::StackName", "WEBDOMAIN"]
+
+# To Create Cloudwatch setup
+  MyCloudWatch:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn:
+    - "MyWEBAutoScaling"
+    Properties:
+      TemplateURL: !Sub "${PMTemplateURL}/webapp-cloudwatch.yaml"
+      TimeoutInMinutes: '10'
+      Parameters:
+        PMWebScalingGroup: !GetAtt "MyWEBAutoScaling.Outputs.WebScalingGroup"
+        PMWebServerScaleUpPolicy: !GetAtt "MyWEBAutoScaling.Outputs.WebServerScaleUpPolicy"
+        PMWebServerScaleDownPolicy: !GetAtt "MyWEBAutoScaling.Outputs.WebServerScaleDownPolicy"
+        PMAppScalingGroup: !GetAtt "MyAPPAutoScaling.Outputs.AppScalingGroup"
+        PMAPPServerScaleUpPolicy: !GetAtt "MyAPPAutoScaling.Outputs.APPServerScaleUpPolicy"
+        PMAPPServerScaleDownPolicy: !GetAtt "MyAPPAutoScaling.Outputs.APPServerScaleDownPolicy"
+
+#  Uncomment below lines to create route53
+
+# To Create Route53
+#  MyDNS:
+#   Type: "AWS::CloudFormation::Stack"
+#     DependsOn:
+#     - "MyWEBAutoScaling"
+#     Properties:
+#       TemplateURL: !Sub "${PMTemplateURL}/webapp-route53.yaml"
+#       TimeoutInMinutes: '10'
+#       Parameters:
+#         PMWEBLBDNSName: !GetAtt "MyWEBELB.Outputs.WEBLBDNSName"
+#         PMWEBLBHostedZoneId: !GetAtt "MyWEBELB.Outputs.WEBLBHostedZoneId"
+#         PMWEBDOMAIN: !FindInMap ["EnvMap", !Ref "AWS::StackName", "WEBDOMAIN"]
+#         PMHostedZone: !Ref "PMHostedZone"
+
+
+Outputs:
+
+  Webserver:
+    Description: "Web Server Site"
+    Value:
+      Fn::Join:
+        - ''
+        - - "http://"
+          - !FindInMap ["EnvMap", !Ref "AWS::StackName", "WEBDOMAIN"]
+          - "/"
+
+# Own Certificates
+
+  PMDomain1CertARN:
+    Description: "A reference to SSL Certificate ARN of the region"
+    Value: !FindInMap ["RegionMap", "us-east-1", "CertARN"]
+    Export:
+      Name: !Sub "${AWS::StackName}CDN-PMDomain1CertARN"
+
+  PMHostedZone:
+    Description: "A reference to SSL Certificate ARN of the region"
+    Value: !Ref "PMHostedZone"
+    Export:
+      Name: !Sub "${AWS::StackName}CDN-PMHostedZone"
+
+  PMCDNDOMAIN:
+    Description: "A reference to SSL Certificate ARN of the region"
+    Value: !FindInMap ["EnvMap", !Ref "AWS::StackName", "CDNDOMAIN"]
+    Export:
+      Name: !Sub "${AWS::StackName}CDN-PMCDNDOMAIN"
+
+
+
