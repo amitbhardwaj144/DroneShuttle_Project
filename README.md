@@ -1,7 +1,7 @@
 # AWS_Infra-CFN
-# Welcome to the DroneShuttle Project Readme text, this is file is to give you a referrence on where to start, what to read.
+## Welcome to the DroneShuttle Project Readme text, this is file is to give you a referrence on where to start, what to read.
 
-# Architecture Design
+## Architecture Design
 
 Refer to the docs folder :
 ![DroneShuttles_ArchitectureDesign.drawio](/architecture/DroneShuttles_ArchitectureDesign.drawio.html)
