@@ -1,4 +1,4 @@
-name: Delete to AWS CloudFormation DroneShuttles Project
+name: Delete Stack from AWS CloudFormation DroneShuttles Project
 
 on:
  # push:
