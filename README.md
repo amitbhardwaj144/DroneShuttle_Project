@@ -6,13 +6,13 @@
 Refer to the docs folder :
 [DroneShuttles_ArchitectureDesign.drawio](/architecture/DroneShuttles_ArchitectureDesign.drawio.html)
 
+<img width="965" alt="DroneShuttles_ArchitectureDesign" src="https://user-images.githubusercontent.com/61223193/147586870-ae274bb2-fd42-49f6-83dd-6a42c9b46ba2.png">
+
 
 ## Documentation and Deployment Guide
 
 Refer to the deployement guide :
 [DroneShuttle_ProjectDeploymentGuide.pdf](/DroneShuttle_ProjectDeploymentGuide.pdf)
-
-<img width="965" alt="DroneShuttles_ArchitectureDesign" src="https://user-images.githubusercontent.com/61223193/147586870-ae274bb2-fd42-49f6-83dd-6a42c9b46ba2.png">
 
 
 ## Infrastructure-as-Code (IaC)
