@@ -25,7 +25,7 @@ Parameters:
 
 # Update your own IP address CIDR range
   PMOWNIP:
-    Default: "192.168.0.0/24"
+    Default: "0.0.0.0/24"
     Description: "Update this with your own office/home public ip address"
     Type: "String"
 
