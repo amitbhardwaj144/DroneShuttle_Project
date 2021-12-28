@@ -1,7 +1,7 @@
-# Drone Shuttles Ltd. Project deployement on AWS Cloud
+# Drone Shuttles Ltd. Project Deployement on AWS Cloud
 ### Welcome to the DroneShuttle Project Readme text, this is file is to give you a referrence on where to start, what to read.
 
-## Architecture Design
+### Architecture Design
 
 Refer to the architecture folder for clear view :
 [DroneShuttles_ArchitectureDesign.pdf](/architecture/DroneShuttles_ArchitectureDesign.pdf)
@@ -9,13 +9,13 @@ Refer to the architecture folder for clear view :
 <img width="965" alt="DroneShuttles_ArchitectureDesign" src="https://user-images.githubusercontent.com/61223193/147586870-ae274bb2-fd42-49f6-83dd-6a42c9b46ba2.png">
 
 
-## Documentation and Deployment Guide
+### Documentation and Deployment Guide
 
 Refer to the deployement guide :
 [DroneShuttle_ProjectDeploymentGuide.pdf](/DroneShuttle_ProjectDeploymentGuide.pdf)
 
 
-## Infrastructure-as-Code (IaC)
+### Infrastructure-as-Code (IaC)
 
 The templates below are included in this repository and reference architecture:
 
@@ -36,7 +36,6 @@ The templates below are included in this repository and reference architecture:
             - [infrastructure/webapp-route53.yaml]
 
 More details about these template, please refer to deployement guide section.
-
 
 ## Author
 
