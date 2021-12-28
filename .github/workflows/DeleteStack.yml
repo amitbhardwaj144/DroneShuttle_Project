@@ -1,4 +1,4 @@
-name: Delete to AWS CloudFormation
+name: Delete to AWS CloudFormation DroneShuttles Project
 
 on:
  # push:
