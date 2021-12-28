@@ -1,4 +1,4 @@
-name: Deploy Stack from AWS CloudFormation DroneShuttles Project
+name: Deploy Stack for prod environment of DroneShuttles Project
 
 on:
  # push:
