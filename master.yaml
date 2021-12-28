@@ -38,6 +38,7 @@ Parameters:
 # Update your own S3 bucket URL of infrastructure code
   PMTemplateURL:
     Default: "https://cf-templates-1svjbbx2cs7l5-us-east-1.s3.amazonaws.com/infrastructure"
+    #Default: "https://github.com/amitbhardwaj144/DroneShuttle_Project/infrastructure"
     Description: "Enter an existing S3 Cloudformation Bucket."
     Type: "String"
 
