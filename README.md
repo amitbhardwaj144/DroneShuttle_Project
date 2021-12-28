@@ -4,7 +4,7 @@
 ## Architecture Design
 
 Refer to the docs folder :
-[DroneShuttles_ArchitectureDesign.drawio](/architecture/DroneShuttles_ArchitectureDesign.drawio.html)
+[DroneShuttles_ArchitectureDesign.pdf](/architecture/DroneShuttles_ArchitectureDesign.pdf)
 
 <img width="965" alt="DroneShuttles_ArchitectureDesign" src="https://user-images.githubusercontent.com/61223193/147586870-ae274bb2-fd42-49f6-83dd-6a42c9b46ba2.png">
 
