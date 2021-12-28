@@ -4,20 +4,21 @@
 ## Architecture Design
 
 Refer to the docs folder :
-![DroneShuttles_ArchitectureDesign.drawio](/architecture/DroneShuttles_ArchitectureDesign.drawio.html)
+[DroneShuttles_ArchitectureDesign.drawio](/architecture/DroneShuttles_ArchitectureDesign.drawio.html)
 
 
 ## Documentation and Deployment Guide
 
 Refer to the deployement guide :
-![DroneShuttle_ProjectDeploymentGuide.pdf](/DroneShuttle_ProjectDeploymentGuide.pdf)
+[DroneShuttle_ProjectDeploymentGuide.pdf](/DroneShuttle_ProjectDeploymentGuide.pdf)
 
 
 ## Infrastructure-as-Code (IaC)
 
 The templates below are included in this repository and reference architecture:
 
-![DroneShuttles_Project]
+[DroneShuttles_Project]
+
         - [master.yaml]
             - [infrastructure/webapp-iam.yaml]
             - [infrastructure/webapp-s3bucket.yaml]
