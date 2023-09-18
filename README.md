@@ -1,4 +1,4 @@
-# Drone Shuttles Ltd. Project Deployement on AWS Cloud
+# Drone Shuttles Ltd. Project Deployment on AWS Cloud
 ### Welcome to the DroneShuttle Project Readme text, this is file is to give you a referrence on where to start, what to read.
 
 ### Architecture Design
